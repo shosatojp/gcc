@@ -143,7 +143,7 @@ class Keiba(Collector):
             return len([
                 await self.add_future('get_race', self.get_race_page(race_url))
                 for race_url in await self.run_in_executor(get_race_urls, html)
-            ]) != 0 if html else False
+            ]) == 100 if html else False
 
         await self.queued_paging(1, 1000, lambda page: f(page), queue_size=queue_size)
 
@@ -155,7 +155,7 @@ class Keiba(Collector):
                 'list': '100',
                 'birthyear': year,
             })
-            return len(await self.run_in_executor(get_horse_urls, html)) != 0 if html else False
+            return len(await self.run_in_executor(get_horse_urls, html)) == 100 if html else False
 
         await self.queued_paging(1, 1000, lambda page: f(page), queue_size=queue_size)
 
