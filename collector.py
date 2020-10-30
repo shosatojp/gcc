@@ -36,7 +36,7 @@ class Collector():
                 return
             else:
                 self._futures = {e for e in self._futures if not e.done()}
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.01)
 
     async def queued_paging(self, pagestart, pageend, mkcorofn,
                             queue_size=2):
