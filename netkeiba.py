@@ -126,7 +126,7 @@ class Keiba(Collector):
 
         return html
 
-    async def collect(self, year):
+    async def collect(self, year, queue_size=3):
         async def f(page):
             print(page)
             html = await self.get_search_page(page, {
@@ -141,9 +141,9 @@ class Keiba(Collector):
                 for race_url in await self.run_in_executor(get_race_urls, html)
             ]) != 0 if html else True
 
-        await self.queued_paging(1, 1000, lambda page: f(page), queue_size=3)
+        await self.queued_paging(1, 1000, lambda page: f(page), queue_size=queue_size)
 
-    async def collect_horse(self, year):
+    async def collect_horse(self, year, queue_size=3):
         async def f(page):
             print(page)
             html = await self.get_search_page(page, {
@@ -153,13 +153,14 @@ class Keiba(Collector):
             })
             return len(await self.run_in_executor(get_horse_urls, html)) != 0 if html else True
 
-        await self.queued_paging(1, 1000, lambda page: f(page), queue_size=3)
+        await self.queued_paging(1, 1000, lambda page: f(page), queue_size=queue_size)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('netkeiba.com')
     parser.add_argument('--type', '-t', choices=['race', 'horse'], default='race')
     parser.add_argument('--year', '-y', type=int, required=True)
+    parser.add_argument('--queue_size', type=int, default=3)
     parser.add_argument('--wait', '-w', type=int, default=10, help='wait time in seconds')
     parser.add_argument('--dir', '-d', type=str, default='cache', help='cache directory')
     parser.add_argument('--useragent', '-ua', type=str, default='')
@@ -173,9 +174,9 @@ if __name__ == "__main__":
         useragent=args.useragent,
     )
     if args.type == 'race':
-        asyncio.run(c.run(c.collect(args.year)))
+        asyncio.run(c.run(c.collect(args.year, queue_size=args.queue_size)))
     elif args.type == 'horse':
-        asyncio.run(c.run(c.collect_horse(args.year)))
+        asyncio.run(c.run(c.collect_horse(args.year, queue_size=args.queue_size)))
     else:
         print('invalid type')
         exit(1)
