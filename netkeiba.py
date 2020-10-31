@@ -11,6 +11,8 @@ import urllib.parse
 import argparse
 import signal
 
+SITE_ENCODING = 'euc_jis_2004'
+
 
 def get_race_urls(html):
     doc = bs4.BeautifulSoup(html, 'lxml')
@@ -78,8 +80,8 @@ class Keiba(Collector):
                          'user-agent': self.useragent},
                 data=urllib.parse.urlencode(options)
             ) as req:
-                req.encoding = 'euc-jp'
-                search_result = await req.text()
+                content = await req.read()
+                search_result = content.decode(SITE_ENCODING)
                 if str(req.url) == url:
                     self.cacher.set(filename, search_result)
                 else:
@@ -106,14 +108,14 @@ class Keiba(Collector):
                     url=url,
                     headers={'content-type': 'application/x-www-form-urlencoded',
                              'user-agent': self.useragent},
-                    data=urllib.parse.urlencode(data, encoding='euc-jp')
+                    data=urllib.parse.urlencode(data, encoding=SITE_ENCODING)
                 ) as req:
                     try:
-                        req.encoding = 'euc-jp'
-                        result = await req.text()
+                        content = await req.read()
+                        result = content.decode(SITE_ENCODING)
                         self.cacher.set(filename, result)
                     except Exception as e:
-                        print(e)
+                        print('get_tail', e)
                         return None
             return result
 
@@ -126,8 +128,8 @@ class Keiba(Collector):
             await self.waiter.wait(url)
             print('fetching', url)
             async with aiohttp.request('get', url, headers={'user-agent': self.useragent}) as req:
-                req.encoding = 'euc-jp'
-                html = await req.text()
+                content = await req.read()
+                html = content.decode(SITE_ENCODING)
                 self.cacher.set(filename, html)
 
         return html
