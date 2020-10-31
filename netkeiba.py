@@ -84,6 +84,7 @@ class Keiba(Collector):
                     self.cacher.set(filename, search_result)
                 else:
                     print(f'Warning: redirected to {str(req.url)}')
+                    self.cacher.set(urllib.parse.urlencode(req.url, safe='') + '.html', search_result)
                     return None
 
         if n == 1:
