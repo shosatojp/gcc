@@ -1,5 +1,6 @@
 import asyncio
 from asyncio.locks import Semaphore
+from typing import Any, List, Optional
 import aiohttp
 from waiter import Waiter
 from reporter import Reporter
@@ -133,7 +134,7 @@ class Keiba(Collector):
     async def collect(self, year, queue_size=3):
         async def f(page):
             print(page)
-            html = await self.get_search_page(page, {
+            html, _ = await self.async_retry(3, self.get_search_page, page, {
                 'pid': 'race_list',
                 'start_year': str(year),
                 'end_year': str(year),
@@ -150,11 +151,14 @@ class Keiba(Collector):
     async def collect_horse(self, year, queue_size=3):
         async def f(page):
             print(page)
-            html = await self.get_search_page(page, {
+            html, error = await self.async_retry(3, self.get_search_page, page, {
                 'pid': 'horse_list',
                 'list': '100',
                 'birthyear': year,
             })
+            if error:
+                print('Waringn: max retries exceeded')
+                return False
             return len(await self.run_in_executor(get_horse_urls, html)) == 100 if html else False
 
         await self.queued_paging(1, 1000, lambda page: f(page), queue_size=queue_size)

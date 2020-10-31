@@ -17,7 +17,10 @@ class Collector():
             self._queues[tag] = asyncio.Queue(20)
 
         async def a():
-            await coro
+            try:
+                await coro
+            except Exception as e:
+                print('add_future', e)
             self._queues[tag].get_nowait()
         await self._queues[tag].put(None)
         self._futures.add(asyncio.ensure_future(a()))
@@ -28,7 +31,8 @@ class Collector():
 
     async def run(self, coro):
         await self.add_future('run', coro)
-        await self.purge_finished_futures()
+        await asyncio.wait(self._futures)
+        # await self.purge_finished_futures()
 
     async def purge_finished_futures(self):
         while True:
@@ -46,9 +50,13 @@ class Collector():
 
         for page_num in range(pagestart, pageend+1):
             async def worker(p):
-                r = await mkcorofn(p)
-                q.decrement()
-                if r == False:
+                try:
+                    r = await mkcorofn(p)
+                    q.decrement()
+                    if r == False:
+                        q.end()
+                except Exception as e:
+                    print('queued_paging', e)
                     q.end()
 
             if await q.increment() == False:
@@ -56,6 +64,14 @@ class Collector():
             pages.append(asyncio.create_task(worker(page_num)))
 
         await asyncio.gather(*pages)
+
+    async def async_retry(self, n: int, fn, *args, **kwargs):
+        for _ in range(n):
+            try:
+                return (await fn(*args), False)
+            except Exception as e:
+                print(e)
+        return None, True
 
 
 class UnboundQueue():
