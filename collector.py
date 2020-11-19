@@ -4,6 +4,7 @@ from concurrent.futures import ProcessPoolExecutor
 from typing import Deque, Dict
 import asyncio
 import os
+import traceback
 
 
 class Collector():
@@ -20,7 +21,7 @@ class Collector():
             try:
                 await coro
             except Exception as e:
-                print('add_future', e)
+                print('add_future', e, traceback.format_exc())
             self._queues[tag].get_nowait()
         await self._queues[tag].put(None)
         self._futures.add(asyncio.ensure_future(a()))
@@ -56,7 +57,7 @@ class Collector():
                     if r == False:
                         q.end()
                 except Exception as e:
-                    print('queued_paging', e)
+                    print('queued_paging', traceback.format_exc())
                     q.end()
 
             if await q.increment() == False:

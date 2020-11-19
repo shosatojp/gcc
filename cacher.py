@@ -5,8 +5,12 @@ import json
 
 def tmp_save(path: str, content: str):
     tmppath = path+'~'
-    with open(tmppath, 'wt', encoding='utf-8') as f:
-        f.write(content)
+    if isinstance(content, bytes):
+        with open(tmppath, 'wb') as f:
+            f.write(content)
+    else:
+        with open(tmppath, 'wt', encoding='utf-8') as f:
+            f.write(content)
     shutil.move(tmppath, path)
 
 
@@ -16,13 +20,17 @@ class Cacher():
             os.mkdir(cache_dir)
         self.cache_dir = cache_dir
 
-    def get(self, filename: str):
+    def get(self, filename: str, binary=False):
         content, info = None, None
 
         path = os.path.join(self.cache_dir, filename)
         if os.path.exists(path):
-            with open(path, 'rt', encoding='utf-8') as f:
-                content = f.read()
+            if binary:
+                with open(path, 'rb') as f:
+                    content = f.read()
+            else:
+                with open(path, 'rt', encoding='utf-8') as f:
+                    content = f.read()
 
         infopath = os.path.join(self.cache_dir, filename+'.json')
         if os.path.exists(infopath):
