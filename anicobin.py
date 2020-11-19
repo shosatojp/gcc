@@ -26,8 +26,10 @@ def get_post_urls(html):
 def get_pict_urls(html):
     doc = bs4.BeautifulSoup(html, 'lxml')
     l = []
+    e: bs4.element.Tag
     for e in doc.select('div.tw_matome > a > img'):
-        l.append(e['src'])
+        url = e.parent['href']
+        l.append(url)
     return l
 
 
